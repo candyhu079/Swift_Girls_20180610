@@ -53,43 +53,19 @@ class ViewController: UIViewController {
     
     // "+", "-", "x", "/" 按鈕被按下後要執行的方法
     @IBAction func operatorButtonClicked(_ sender: UIButton) {
+        //需可以抓取operator，不然接下來做什麼都沒意義
+        guard let symbol = sender.currentTitle else {
+            return
+        }
+        
         //把tempNumberString 轉換成數字，加進numberArray 內
         //判斷numberArray 內的數字是否大於等於兩個（表示可以運算）
         //依照operatorString 來決定是走哪一個運算方法
-        if let symbol = sender.currentTitle {
-            inputString += symbol
-            //TODO: optional
-            numberArray.append(Float(tempNumberString)!)
-            tempNumberString = ""
-            
-            if (numberArray.count >= 2) {
-                switch (operatorString) {
-                case "+" :
-                    add()
-                case "-" :
-                    minus()
-                case "x" :
-                    multiply()
-                case "/" :
-                    divide()
-                    
-                default:
-                    break
-                }
-            }
-            
-            operatorString = symbol
+        inputString += symbol
+        
+        if let number = Float(tempNumberString) {
+            numberArray.append(number)
         }
-    }
-    
-    // "C" 按鈕被按下後要執行的方法
-    @IBAction func clearButtonClicked(_ sender: UIButton) {
-        clear()
-    }
-    
-    // "=" 按鈕被按下後要執行的方法
-    @IBAction func amountButtonClicked(_ sender: UIButton) {
-        numberArray.append(Float(tempNumberString)!)
         tempNumberString = ""
         
         if (numberArray.count >= 2) {
@@ -108,13 +84,44 @@ class ViewController: UIViewController {
             }
         }
         
+        operatorString = symbol
+    }
+    
+    // "C" 按鈕被按下後要執行的方法
+    @IBAction func clearButtonClicked(_ sender: UIButton) {
+        clear()
+    }
+    
+    // "=" 按鈕被按下後要執行的方法
+    @IBAction func amountButtonClicked(_ sender: UIButton) {
+        inputString += "="
+        
+        if let number = Float(tempNumberString) {
+            numberArray.append(number)
+        }
+        tempNumberString = ""
+        
+        if (numberArray.count >= 2) {
+            switch (operatorString) {
+            case "+" :
+                add()
+            case "-" :
+                minus()
+            case "x" :
+                multiply()
+            case "/" :
+                divide()
+                
+            default:
+                break
+            }
+        }
+        
+        //跟+-x/ 不一樣的地方是，按下等於後要把結果串接進inputString，且不用紀錄operatorString
         guard numberArray.count > 0 else {
             return
         }
-        result = numberArray[0]
-        
-        inputString += "= \(result)"
-        resultLabel.text = String(result)
+        inputString += "\(numberArray[0])"
         
     }
     
