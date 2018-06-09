@@ -22,23 +22,18 @@ class ViewController: UIViewController {
     //因使用者可能會輸入多位數，這個變數用來紀錄使用者輸入的數字
     var tempNumberString: String = ""
     
-    //紀錄等待被相互運算的數字們
-    var numberArray: [Float] = [] {
-        didSet {
-            if numberArray.count > 0 {
-                resultLabel.text = "\(numberArray[0])"
-            } else {
-                resultLabel.text = "0"
-            }
-        }
-    }
-    
     //記錄目前的運算子
     var operatorString: String = ""
     
     //記錄結果
-    var result: Float = 0
+    var result: Float? = nil {
+        didSet {
+            resultLabel.text = "\(result ?? 0)"
+        }
+    }
     
+    //記錄第二個數字
+    var nextNumber: Float? = nil
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -58,17 +53,21 @@ class ViewController: UIViewController {
             return
         }
         
-        //把tempNumberString 轉換成數字，加進numberArray 內
-        //判斷numberArray 內的數字是否大於等於兩個（表示可以運算）
+        //把tempNumberString 轉換成數字，放進result 或nextNumber 內
+        //判斷兩個變數是否都有值（表示可運算）
         //依照operatorString 來決定是走哪一個運算方法
         inputString += symbol
         
         if let number = Float(tempNumberString) {
-            numberArray.append(number)
+            if result == nil {
+                result = number
+            } else {
+                nextNumber = number
+            }
         }
         tempNumberString = ""
         
-        if (numberArray.count >= 2) {
+        if (result != nil && nextNumber != nil) {
             switch (operatorString) {
             case "+" :
                 add()
@@ -97,11 +96,15 @@ class ViewController: UIViewController {
         inputString += "="
         
         if let number = Float(tempNumberString) {
-            numberArray.append(number)
+            if result == nil {
+                result = number
+            } else {
+                nextNumber = number
+            }
         }
         tempNumberString = ""
         
-        if (numberArray.count >= 2) {
+        if (result != nil && nextNumber != nil) {
             switch (operatorString) {
             case "+" :
                 add()
@@ -118,72 +121,53 @@ class ViewController: UIViewController {
         }
         
         //跟+-x/ 不一樣的地方是，按下等於後要把結果串接進inputString，且不用紀錄operatorString
-        guard numberArray.count > 0 else {
+        guard result != nil else {
             return
         }
-        inputString += "\(numberArray[0])"
-        
+        inputString += "\(result!)"
     }
     
     //MARK: 運算子運算方法
     func add() {
-        //先取出numberArray 中的第一個數字，用for 迴圈把剩下的數字都相加
-        //最後再把算出的數字塞回numberArray ，此時numberArray 裡面只剩result ，等待後繼被運算
-        guard numberArray.count > 0 else {
+        //判斷兩個變數是否都有值，都有就相加
+        //計算完後把第二個數字改為nil
+        guard result != nil && nextNumber != nil else {
             return
         }
         
-        var result = numberArray[0]
-        
-        for index in 1..<numberArray.count {
-            result = result + numberArray[index]
-        }
-        numberArray = [result]
+        result = result! + nextNumber!
+        nextNumber = nil
     }
     
     func minus() {
-        guard numberArray.count > 0 else {
+        guard result != nil && nextNumber != nil else {
             return
         }
-        
-        var result = numberArray[0]
-        
-        for index in 1..<numberArray.count {
-            result = result - numberArray[index]
-        }
-        numberArray = [result]
+
+        result = result! - nextNumber!
+        nextNumber = nil
     }
     
     func multiply() {
-        guard numberArray.count > 0 else {
+        guard result != nil && nextNumber != nil else {
             return
         }
         
-        var result = numberArray[0]
-        
-        for index in 1..<numberArray.count {
-            result = result * numberArray[index]
-        }
-        numberArray = [result]
+        result = result! * nextNumber!
+        nextNumber = nil
     }
     
     func divide() {
-        guard numberArray.count > 0 else {
+        guard result != nil && nextNumber != nil else {
             return
         }
         
-        var result = numberArray[0]
-        
-        for index in 1..<numberArray.count {
-            //除以0會錯誤
-            if (numberArray[index] == 0) {
-                clear(string: "Error")
-                return
-            }
-            
-            result = result / numberArray[index]
+        guard nextNumber != 0 else {
+            clear(string: "Error")
+            return
         }
-        numberArray = [result]
+        result = result! / nextNumber!
+        nextNumber = nil
     }
     
     func clear(string: String = "") {
@@ -191,8 +175,8 @@ class ViewController: UIViewController {
         inputString = string
         tempNumberString = ""
         operatorString = ""
-        result = 0
-        numberArray = []
+        result = nil
+        nextNumber = nil
     }
 }
 
